@@ -7,8 +7,9 @@ minSize = 30;
 th = 1.5;
 pth = toPointy(th);
 
-width = 209;
-depth = 95;
+width = 259;
+depth = 115;
+height = 100;
 
 min_flatSize = minSize;
 min_pointySize = toPointy(min_flatSize);
@@ -68,14 +69,19 @@ module hexColumns(initialNudge=[0,0]) {
 }
 
 
-hexColumns();
-hexColumns([pointySize*3/4 + pth * 3/4, flatSize/2 + th/2]);
+linear_extrude(height) {
+    hexColumns();
+    hexColumns([pointySize*3/4 + pth * 3/4, flatSize/2 + th/2]);
 
-//color("red")
-//translate([pointySize_th/2, 0])
-//square([resultingWidth(pointySize) - pointySize_th - pointySize_th * 3 / 4 * (numHexWidth(pointySize)%2),th]);
-//
-//color("red")
-//translate([pointySize_th/2 + pointySize_th * 3 / 4 * ((numHexWidth(pointySize) + 1)%2), resultingDepth(flatSize) - th])
-//square([resultingWidth(pointySize) - pointySize_th * 7/4,th]);
-//
+    widthModifier = numHexWidth(pointySize)%2;
+    depthModifier = numHexDepth(flatSize)%2;
+
+
+    translate([pointySize_th/2, 0])
+    square([resultingWidth(pointySize) - pointySize_th * (1 + 0.75 * widthModifier),th]);
+
+    topBarModifier = abs(2 * depthModifier - widthModifier);
+    translate([pointySize_th * (0.5 + 0.75 * depthModifier ), resultingDepth(flatSize) - th])
+    square([resultingWidth(pointySize) - pointySize_th * (1 + 0.75 * topBarModifier),th]);
+}
+
