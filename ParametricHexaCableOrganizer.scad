@@ -19,8 +19,8 @@ Height = 100; // [3:300]
 // Increaze the size of the cells to fit the bounding box
 Scaling_strategy="none"; // [none:Don't scale, both:Consider both dimensions, width:Fit width, depth:Fit depth]
 
-// Create half-hexagons and flatten out sides along the "flat" edges
-Close_off="none"; // [none:Don't close, one:Close on a single side, both:Close on the both sides]
+// Special features (closing off sides or bottom)
+Special="none"; // [none:Don't close anything, one:Close a single side, both:Close both sides, bottom:Close the bottom of the pipes]
 
 
 
@@ -68,6 +68,10 @@ cube([flatSize, flatSize, Height+20]);
 %color("purple", 0.2)
 cube([Width, Depth, 1]);
 
+module innerHex() {
+    translate([pointySize_th/2, flatSize_th/2])
+    circle(d=pointySize_th, $fn=6);
+}
 
 module hex() {
     translate([pointySize_th/2, flatSize_th/2])
@@ -77,12 +81,16 @@ module hex() {
     }
 }
 
-module hexColumns(initialNudge=[0,0]) {
+module hexColumns(initialNudge=[0,0], innerHex=false) {
     for(
         i = [initialNudge[0] : (pointySize + pointySize_th) * 3 / 4 : borderFuz(Width-pointySize_th)],
         j = [initialNudge[1] : (flatSize + flatSize_th)/2: borderFuz(Depth - flatSize_th)]
     ) {   
-        translate([i,j,0]) hex();    
+        translate([i,j,0])
+        if(innerHex)
+            innerHex();
+        else
+            hex();
     }
 }
 
@@ -94,17 +102,24 @@ linear_extrude(Height) {
     widthModifier = numHexWidth(pointySize)%2;
     depthModifier = numHexDepth(flatSize)%2;
 
-    if (Close_off=="one" || Close_off=="both") {
+    if (Special=="one" || Special=="both") {
         translate([pointySize_th/2, 0])
         square([resultingWidth(pointySize) - pointySize_th * (1 + 0.75 * widthModifier),th]);
     }
 
-    if (Close_off=="both") {
+    if (Special=="both") {
         topBarModifier = abs(2 * depthModifier - widthModifier);
         translate([pointySize_th * (0.5 + 0.75 * depthModifier ), resultingDepth(flatSize) - th])
         square([resultingWidth(pointySize) - pointySize_th * (1 + 0.75 * topBarModifier),th]);
     }
 }
+
+if (Special=="bottom")
+linear_extrude(th) {
+    hexColumns(innerHex=true);
+    hexColumns([pointySize*3/4 + pth * 3/4, flatSize/2 + th/2], innerHex=true);
+}
+
 
 if(!$preview)
 translate([pointySize_th / 4 * cos(60), pointySize_th / 4 * cos(30), 5])
